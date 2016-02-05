@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>HTML5 chat post demo</title>
+	<meta charset="utf-8">
+	<style>
+
+/* Global */
+
+body {
+	margin: 20px;
+	padding: 0;
+	font-family: sans-serif;
+}
+
+p {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+input {
+	margin: 0 8px;
+}
+
+/* Positioning */
+
+.post {
+	margin: 6px;
+	padding: 4px;
+	width: 500px;
+	border: 1px solid;
+}
+
+.post .avatar {
+	float: left;
+	width: 50px;
+	height: 50px;
+}
+
+.post .nick {
+	padding: 6px 10px 10px 60px;
+}
+
+.post .message {
+	padding: 0 0 6px 60px;
+}
+
+.css-clear-both {
+	clear: both;
+}
+
+/* Appearance */
+
+.post {
+	border: 1px solid #555;
+	border-radius: 4px;
+	background-color: #eee;
+	background-repeat: no-repeat;
+	background-position: right bottom;
+}
+
+.post .avatar {
+	border-radius: 4px;
+	background: #555;
+}
+
+.post .nick {
+	font-weight: bold;
+}
+	</style>
+</head>
+<body>
+	<h1>HTML5 chat post demo</h1>
+
+	<div class="post">
+		<img class="avatar" src="img/avatar.png" alt="">
+		<p class="nick">Sai Kurogetsu</p>
+		<p class="message">
+			A rolling stone gathers no moss.
+		</p>
+		<div class="css-clear-both"></div>
+	</div>
+
+	<div class="post">
+		<img class="avatar" src="img/avatar.png" alt="">
+		<p class="nick">Sai Kurogetsu</p>
+		<p class="message">
+			All work and no play makes Jack a dull boy.<br>
+			All work and no play makes Jack a dull boy.<br>
+			All work and no play makes Jack a dull boy.<br>
+			All work and no play makes Jack a dull boy.<br>
+			All work and no play makes Jack a dull boy.
+		</p>
+		<div class="css-clear-both"></div>
+	</div>
+
+	<div class="post">
+		<img class="avatar" src="img/avatar.png" alt="">
+		<p class="nick">Sai Kurogetsu</p>
+		<p class="message">
+		</p>
+		<div class="css-clear-both"></div>
+	</div>
+
+	<div class="post">
+		<img class="avatar" src="img/avatar.png" alt="">
+		<!-- this post is broken, but it still renders okay -->
+		<div class="css-clear-both"></div>
+	</div>
+
+	<div class="config">
+		<form>
+			<h3>Nick</h3>
+			<input type="checkbox" id="nick-bold"><label for="nick-bold">Bold</label><br>
+			<input type="checkbox" id="nick-italic"><label for="nick-italic">Italic</label><br>
+			<input type="checkbox" id="nick-underline"><label for="nick-underline">Underline</label><br>
+			<input type="color" id="nick-color"><label for="nick-color">Color</label>
+			<h3>Post</h3>
+			<input type="color" id="post-color"><label for="post-color">Text color</label><br>
+			<input type="color" id="post-border-color"><label for="post-border-color">Border color</label><br>
+			<input type="color" id="post-bgcolor"><label for="post-bgcolor">Background color</label><br>
+			<input type="range" id="post-bgtransparency" min="0" max="1" step="0.01"><label for="post-bgtransparency">Background transparency</label><br>
+			<input type="checkbox" id="post-bgimage"><label for="post-bgimage">Background image</label><br>
+			<input type="range" id="post-bgpos-horizontal" min="0" max="100"><label for="post-bgpos-horizontal">Background image position (horizontal)</label><br>
+			<input type="range" id="post-bgpos-vertical" min="0" max="100"><label for="post-bgpos-vertical">Background image position (vertical)</label>
+		</form>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+	<script>
+function parseColor(outputFormat, color, alpha) {
+	// convert color to components
+	var components;
+	// rgba
+	if (color.substr(0, 4) == 'rgba') {
+		components = color.split(', ');
+		components[0] = components[0].substr(5);
+		components[3] = components[3].slice(0, -1);
+	// rgb
+	} else if (color.substr(0, 4) == 'rgb(') {
+		components = color.split(', ');
+		components[0] = components[0].substr(4);
+		components[2] = components[2].slice(0, -1);
+		components[3] = '1';
+	// hex
+	} else if (color.substr(0, 1) == '#') {
+		// short hex, e.g. #ccc
+		if (color.length == 4) {
+			components = /^#?([a-f\d])([a-f\d])([a-f\d])$/i.exec(color);
+			components[0] = parseInt(components[1], 16);
+			components[1] = parseInt(components[2], 16);
+			components[2] = parseInt(components[3], 16);
+			components[0] *= 17;
+			components[1] *= 17;
+			components[2] *= 17;
+		// long hex, e.g. #cccccc
+		} else {
+			components = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+			components[0] = parseInt(components[1], 16);
+			components[1] = parseInt(components[2], 16);
+			components[2] = parseInt(components[3], 16);
+		}
+		components[3] = '1';
+	// unknown format
+	} else {
+		components = new Array();
+		components[0] = '0';
+		components[1] = '0';
+		components[2] = '0';
+		components[3] = '0';
+	}
+
+	// override alpha channel
+	if (typeof alpha !== 'undefined' && alpha != '')
+		components[3] = alpha;
+
+	// return value in specified format
+	switch(outputFormat) {
+	case 'rgba':
+		return 'rgba(' + components[0] + ', ' + components[1] + ', ' + components[2] + ', ' + components[3] + ')';
+	case 'rgb':
+		return 'rgb(' + components[0] + ', ' + components[1] + ', ' + components[2] + ')';
+	case 'a':
+		return components[3];
+	case 'hex': // always returns long hex
+		r = parseInt(components[0]).toString(16);
+		g = parseInt(components[1]).toString(16);
+		b = parseInt(components[2]).toString(16);
+
+		return '#' + (r.length == 1 ? '0' + r : r) +
+		             (g.length == 1 ? '0' + g : g) +
+		             (b.length == 1 ? '0' + b : b);
+	}
+}
+
+$(document).ready(function () {
+	// default
+	$('input#nick-bold').prop('checked', $('.post .nick').css('font-weight') == 'bold' || $('.post .nick').css('font-weight') == '700');
+	$('input#nick-italic').prop('checked', $('.post .nick').css('font-style') == 'italic');
+	$('input#nick-underline').prop('checked', $('.post .nick').css('text-decoration') == 'underline');
+	$('input#nick-color').val(parseColor('hex', $('.post .nick').css('color')));
+	$('input#post-color').val(parseColor('hex', $('.post').css('color')));
+	$('input#post-border-color').val(parseColor('hex', $('.post').css('color')));
+	$('input#post-bgcolor').val(parseColor('hex', $('.post').css('background-color')));
+	$('input#post-bgtransparency').val(parseColor('a', $('.post').css('background-color')));
+	$('input#post-bgimage').prop('checked', $('.post').css('background-image') != 'none');
+	var post_bgpos = $('.post').css('background-position').split(' ');
+	post_bgpos[0] = post_bgpos[0].slice(0, -1);
+	post_bgpos[1] = post_bgpos[1].slice(0, -1);
+	$('input#post-bgpos-horizontal').val(post_bgpos[0]);
+	$('input#post-bgpos-vertical').val(post_bgpos[1]);
+
+	// events
+
+	// nick - bold
+	$('input#nick-bold').change(function () {
+		$('.post .nick').css({
+			'font-weight': $(this).is(':checked') ? 'bold' : 'normal'
+		});
+	});
+
+	// nick - italic
+	$('input#nick-italic').change(function () {
+		$('.post .nick').css({
+			'font-style': $(this).is(':checked') ? 'italic' : 'normal'
+		});
+	});
+
+	// nick - underline
+	$('input#nick-underline').change(function () {
+		$('.post .nick').css({
+			'text-decoration': $(this).is(':checked') ? 'underline' : 'none'
+		});
+	});
+
+	// nick - color
+	$('input#nick-color').change(function () {
+		$('.post .nick').css({
+			'color': $('input#nick-color').val()
+		});
+	});
+
+	// post - text color
+	$('input#post-color').change(function () {
+		$('.post').css({
+			'color': $('input#post-color').val()
+		});
+	});
+
+	// post - border color
+	$('input#post-border-color').change(function () {
+		$('.post').css({
+			'border-color': $('input#post-border-color').val()
+		});
+	});
+
+	// post - background color
+	$('input#post-bgcolor').change(function () {
+		$('.post').css({
+			'background-color': parseColor('rgba', $('input#post-bgcolor').val(), $('input#post-bgtransparency').val())
+		});
+	});
+
+	// post - background transparency
+	// interval for smooth changing
+	$('input#post-bgtransparency').mousedown(function () {
+		interval_post_bgtransparency = setInterval(function () {
+			$('.post').css({
+				'background-color': parseColor('rgba', $('input#post-bgcolor').val(), $('input#post-bgtransparency').val())
+			});
+		}, 50);
+	}).bind('mouseup mouseleave', function () {
+		if (typeof interval_post_bgpos !== 'undefined')
+			clearInterval(interval_post_bgtransparency);
+	});
+	// legacy version (smooth doesn't work on mobile)
+	$('input#post-bgtransparency').change(function () {
+		$('.post').css({
+			'background-color': parseColor('rgba', $('input#post-bgcolor').val(), $('input#post-bgtransparency').val())
+		});
+	});
+
+	// post - background image
+	$('input#post-bgimage').change(function () {
+		$('.post').css({
+			'background-image': $(this).is(':checked') ? 'url("img/post-bg.png")' : 'none'
+		});
+	});
+
+	// post - background image position
+	// interval for smooth changing
+	$('input#post-bgpos-horizontal').add($('input#post-bgpos-vertical')).mousedown(function () {
+		interval_post_bgpos = setInterval(function () {
+			$('.post').css({
+				'background-position': $('input#post-bgpos-horizontal').val() + '% ' + $('input#post-bgpos-vertical').val() + '%'
+			});
+		}, 50);
+	}).bind('mouseup mouseleave', function () {
+		if (typeof interval_post_bgpos !== 'undefined')
+			clearInterval(interval_post_bgpos);
+	});
+	// legacy version (smooth doesn't work on mobile)
+	$('input#post-bgpos-horizontal').add($('input#post-bgpos-vertical')).change(function () {
+		$('.post').css({
+			'background-position': $('input#post-bgpos-horizontal').val() + '% ' + $('input#post-bgpos-vertical').val() + '%'
+		});
+	});
+
+});
+	</script>
+</body>
+</html>
